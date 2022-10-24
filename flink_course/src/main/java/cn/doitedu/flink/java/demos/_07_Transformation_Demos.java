@@ -51,7 +51,6 @@ public class _07_Transformation_Demos {
         SingleOutputStreamOperator<UserInfo> beanStream = streamSource.map(json -> JSON.parseObject(json, UserInfo.class));
         /*beanStream.print();*/
 
-
         /**
          * filter算子的演示
          *   请过滤掉好友超过3位的用户数据
@@ -101,10 +100,15 @@ public class _07_Transformation_Demos {
         KeyedStream<Tuple2<String, Integer>, String> keyedStream = flatten.map(bean -> Tuple2.of(bean.getGender(), 1)).returns(new TypeHint<Tuple2<String, Integer>>() {
                 })
                 .keyBy(tp -> tp.f0);
-        
+
         keyedStream
                 .sum(1);
         /*genderFriendCount.print();*/
+
+        /**
+         * 使用pojo作为keyby
+         */
+        // beanStream.keyBy(UserInfo::getName);
 
         // 各性别中，用户好友数量最大值
 

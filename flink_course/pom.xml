@@ -19,7 +19,7 @@
 
     <profiles>
         <profile>
-            <id> xx </id>
+            <id>xx</id>
         </profile>
     </profiles>
 
@@ -66,9 +66,14 @@
         <!-- flinkSql 整合hive所需-->
         <dependency>
             <groupId>org.apache.flink</groupId>
-            <artifactId>flink-sql-connector-hive-3.1.2_2.11</artifactId>
+            <artifactId>flink-connector-hive_2.12</artifactId>
             <version>${flink.version}</version>
         </dependency>
+<!--        <dependency>-->
+<!--            <groupId>org.apache.flink</groupId>-->
+<!--            <artifactId>flink-sql-connector-hive-3.1.2_2.12</artifactId>-->
+<!--            <version>${flink.version}</version>-->
+<!--        </dependency>-->
 
 
         <dependency>
@@ -115,8 +120,6 @@
         </dependency>
 
 
-
-
         <!-- 打印日志的jar包 -->
         <dependency>
             <groupId>org.slf4j</groupId>
@@ -148,6 +151,12 @@
         <dependency>
             <groupId>org.apache.hadoop</groupId>
             <artifactId>hadoop-client</artifactId>
+            <exclusions>
+                <exclusion>
+                    <groupId>org.apache.avro</groupId>
+                    <artifactId>avro</artifactId>
+                </exclusion>
+            </exclusions>
             <version>2.7.7</version>
         </dependency>
         <dependency>
@@ -175,14 +184,14 @@
         <dependency>
             <groupId>com.ververica</groupId>
             <artifactId>flink-sql-connector-mysql-cdc</artifactId>
-            <version>2.3-doitedu</version>
+            <version>2.2.1</version>
         </dependency>
 
         <!-- 应用redisSink功能所需要的依赖 -->
         <dependency>
             <groupId>org.apache.bahir</groupId>
             <artifactId>flink-connector-redis_2.12</artifactId>
-            <version>1.1-SNAPSHOT</version>
+            <version>1.1.0</version>
         </dependency>
 
 
@@ -238,7 +247,6 @@
     </pluginRepositories>
 
 
-
     <build>
         <plugins>
             <plugin>
@@ -261,8 +269,8 @@
                 </executions>
             </plugin>
 
-
-            <!--<plugin>
+            <!-- 生成avro数据时再用 -->
+            <plugin>
                 <groupId>org.apache.avro</groupId>
                 <artifactId>avro-maven-plugin</artifactId>
                 <version>1.10.0</version>
@@ -278,7 +286,7 @@
                         </configuration>
                     </execution>
                 </executions>
-            </plugin>-->
+            </plugin>
 
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
@@ -311,7 +319,8 @@
                                 </filter>
                             </filters>
                             <transformers>
-                                <transformer implementation="org.apache.maven.plugins.shade.resource.ManifestResourceTransformer">
+                                <transformer
+                                        implementation="org.apache.maven.plugins.shade.resource.ManifestResourceTransformer">
                                     <mainClass>my.programs.main.clazz</mainClass>
                                 </transformer>
                             </transformers>
