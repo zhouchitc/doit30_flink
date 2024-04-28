@@ -39,48 +39,47 @@ public class _24_State_KeyedState_Demo {
 
 
         // 开启  task级别故障自动 failover
-        env.setRestartStrategy(RestartStrategies.fixedDelayRestart(3,1000));
+        env.setRestartStrategy(RestartStrategies.fixedDelayRestart(3, 1000));
 
 
         DataStreamSource<String> source = env.socketTextStream("localhost", 9999);
 
         // 需要使用map算子来达到一个效果：
         // 没来一条数据（字符串），输出 该条字符串拼接此前到达过的所有字符串
-        source
-                .keyBy(s->"0")
-                .map(new RichMapFunction<String, String>() {
+        source.keyBy(s -> "0").map(new RichMapFunction<String, String>() {
 
-                    ListState<String> lstState;
-                    @Override
-                    public void open(Configuration parameters) throws Exception {
-                        RuntimeContext runtimeContext = getRuntimeContext();
-                        // 获取一个List结构的状态存储器
-                        lstState = runtimeContext.getListState(new ListStateDescriptor<String>("lst", String.class));
+            ListState<String> lstState;
 
-                        // 获取一个 单值 结构的状态存储器
-                        // TODO 自己去点一点  ValueState 的 各种操作方法
+            @Override
+            public void open(Configuration parameters) throws Exception {
+                RuntimeContext runtimeContext = getRuntimeContext();
+                // 获取一个List结构的状态存储器
+                lstState = runtimeContext.getListState(new ListStateDescriptor<String>("lst", String.class));
 
-                        // 获取一个 Map 结构的状态存储器
-                        MapState<String, String> mapState = runtimeContext.getMapState(new MapStateDescriptor<String, String>("xx", String.class, String.class));
-                        // TODO 自己去点一点  MapState的各种操作方法
-                    }
+                // 获取一个 单值 结构的状态存储器
+                // TODO 自己去点一点  ValueState 的 各种操作方法
 
-                    @Override
-                    public String map(String value) throws Exception {
+                // 获取一个 Map 结构的状态存储器
+                MapState<String, String> mapState =
+                        runtimeContext.getMapState(new MapStateDescriptor<String, String>("xx", String.class, String.class));
+                // TODO 自己去点一点  MapState的各种操作方法
+            }
 
-                        // 将本条数据，装入状态存储器
-                        lstState.add(value);
+            @Override
+            public String map(String value) throws Exception {
 
-                        // 遍历所有的历史字符串，拼接结果
-                        StringBuilder sb = new StringBuilder();
-                        for (String s : lstState.get()) {
-                            sb.append(s);
-                        }
+                // 将本条数据，装入状态存储器
+                lstState.add(value);
 
-                        return sb.toString();
-                    }
-                }).setParallelism(2)
-                .print().setParallelism(2);
+                // 遍历所有的历史字符串，拼接结果
+                StringBuilder sb = new StringBuilder();
+                for (String s : lstState.get()) {
+                    sb.append(s);
+                }
+
+                return sb.toString();
+            }
+        }).setParallelism(2).print().setParallelism(2);
 
         // 提交一个job
         env.execute();

@@ -63,7 +63,9 @@ public class _08_SinkOperator_Demos {
         FileSink<String> rowSink = FileSink
                 .forRowFormat(new Path("d:/filesink/"), new SimpleStringEncoder<String>("utf-8"))
                 // 文件的滚动策略 （间隔时长10s，或文件大小达到 5M，就进行文件切换
-                .withRollingPolicy(DefaultRollingPolicy.builder().withRolloverInterval(10000).withMaxPartSize(5 * 1024 * 1024).build())
+                .withRollingPolicy(DefaultRollingPolicy.builder()
+                        .withRolloverInterval(10000)
+                        .withMaxPartSize(5 * 1024 * 1024).build())
                 // 分桶的策略（划分子文件夹的策略）
                 .withBucketAssigner(new DateTimeBucketAssigner<String>())
                 .withBucketCheckInterval(5)

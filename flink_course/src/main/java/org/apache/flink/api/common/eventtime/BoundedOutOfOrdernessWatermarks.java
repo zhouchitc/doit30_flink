@@ -36,10 +36,14 @@ import static org.apache.flink.util.Preconditions.checkNotNull;
 @Public
 public class BoundedOutOfOrdernessWatermarks<T> implements WatermarkGenerator<T> {
 
-    /** The maximum timestamp encountered so far. */
+    /**
+     * The maximum timestamp encountered so far.
+     */
     private long maxTimestamp;
 
-    /** The maximum out-of-orderness that this watermark generator assumes. */
+    /**
+     * The maximum out-of-orderness that this watermark generator assumes.
+     */
     private final long outOfOrdernessMillis;
 
     /**
@@ -61,13 +65,17 @@ public class BoundedOutOfOrdernessWatermarks<T> implements WatermarkGenerator<T>
 
     @Override
     public void onEvent(T event, long eventTimestamp, WatermarkOutput output) {
+
+        System.out.println("BoundedOutOfOrdernessWatermarks 执行 onEvent，生成maxTimestamp：" + Math.max(maxTimestamp, eventTimestamp));
+
         maxTimestamp = Math.max(maxTimestamp, eventTimestamp);
     }
 
     @Override
     public void onPeriodicEmit(WatermarkOutput output) {
-        // TODO
-        // System.out.printf("源头周期输出watermark：%d  \n", maxTimestamp - outOfOrdernessMillis - 1);
+
+        System.out.println("BoundedOutOfOrdernessWatermarks 执行 onPeriodicEmit，创建Watermark：" + (maxTimestamp - outOfOrdernessMillis - 1));
+
         output.emitWatermark(new Watermark(maxTimestamp - outOfOrdernessMillis - 1));
     }
 }

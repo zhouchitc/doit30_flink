@@ -26,7 +26,7 @@ import org.apache.flink.util.OutputTag;
  * @QQ: 657270652
  * @Date: 2022/4/26
  * @Desc: process算子及ProcessFunction示例
- *
+ * <p>
  * 在不同类型的 数据流上，调用process算子时，所需要传入的ProcessFunction也会有不同
  **/
 public class _17_ProcessFunctions_Demo {
@@ -57,10 +57,12 @@ public class _17_ProcessFunctions_Demo {
             }
 
             @Override
-            public void processElement(String value, ProcessFunction<String, Tuple2<String, String>>.Context ctx, Collector<Tuple2<String, String>> out) throws Exception {
+            public void processElement(String value,
+                                       ProcessFunction<String, Tuple2<String, String>>.Context ctx,
+                                       Collector<Tuple2<String, String>> out) throws Exception {
 
                 // 可以做测流输出
-                ctx.output(new OutputTag<String>("s1", Types.STRING),value);
+                ctx.output(new OutputTag<String>("s1", Types.STRING), value);
 
                 // 可以做主流输出
                 String[] arr = value.split(",");
@@ -75,7 +77,6 @@ public class _17_ProcessFunctions_Demo {
         });
 
 
-
         /**
          * 在 keyedStream上调用 process算子，传入的是 "KeyedProcessFunction"
          * KeyedProcessFunction 中的 ，泛型1： 流中的 key 的类型；  泛型2： 流中的数据的类型  ；  泛型3： 处理后的输出结果的类型
@@ -83,13 +84,16 @@ public class _17_ProcessFunctions_Demo {
         // 对s1流进行keyby分组
         KeyedStream<Tuple2<String, String>, String> keyedStream = s1.keyBy(tp2 -> tp2.f0);
         // 然后在keyby后的数据流上调用process算子
-        SingleOutputStreamOperator<Tuple2<Integer, String>> s2 = keyedStream.process(new KeyedProcessFunction<String, Tuple2<String, String>, Tuple2<Integer, String>>() {
-            @Override
-            public void processElement(Tuple2<String, String> value, KeyedProcessFunction<String, Tuple2<String, String>, Tuple2<Integer, String>>.Context ctx, Collector<Tuple2<Integer, String>> out) throws Exception {
-                // 把id变整数，把eventId变大写
-                out.collect(Tuple2.of(Integer.parseInt(value.f0), value.f1.toUpperCase()));
-            }
-        });
+        SingleOutputStreamOperator<Tuple2<Integer, String>> s2 = keyedStream.process(
+                new KeyedProcessFunction<String, Tuple2<String, String>, Tuple2<Integer, String>>() {
+                    @Override
+                    public void processElement(Tuple2<String, String> value,
+                                               KeyedProcessFunction<String, Tuple2<String, String>, Tuple2<Integer, String>>.Context ctx,
+                                               Collector<Tuple2<Integer, String>> out) throws Exception {
+                        // 把id变整数，把eventId变大写
+                        out.collect(Tuple2.of(Integer.parseInt(value.f0), value.f1.toUpperCase()));
+                    }
+                });
 
 
         s2.print();

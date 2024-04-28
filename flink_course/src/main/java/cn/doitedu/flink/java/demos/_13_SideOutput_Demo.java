@@ -36,6 +36,7 @@ public class _13_SideOutput_Demo {
 
         // 构造好一个数据流
         DataStreamSource<EventLog> streamSource = env.addSource(new MySourceFunction());
+        streamSource.broadcast()
 
 
         // 需求： 将行为事件流，进行分流
@@ -82,6 +83,5 @@ public class _13_SideOutput_Demo {
         env.execute();
 
     }
-
 
 }

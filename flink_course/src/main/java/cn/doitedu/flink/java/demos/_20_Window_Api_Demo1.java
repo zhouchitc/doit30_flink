@@ -26,9 +26,7 @@ import java.util.*;
  * @Site: <a href="www.51doit.com">多易教育</a>
  * @QQ: 657270652
  * @Date: 2022/5/2
- * @Desc:
- *
- * 测试数据  ：
+ * @Desc: 测试数据  ：
  * 1,e01,10000,p01,10
  * 1,e02,11000,p02,20
  * 1,e02,12000,p03,40
@@ -186,12 +184,13 @@ public class _20_Window_Api_Demo1 {
          * 使用sum算子来实现
          */
         watermarkedBeanStream
-                .map(bean->Tuple2.of(bean,1)).returns(new TypeHint<Tuple2<EventBean2, Integer>>() {})
-                .keyBy(tp->tp.f0.getGuid())
-                .window(SlidingEventTimeWindows.of(Time.seconds(30),Time.seconds(10)))
+                .map(bean -> Tuple2.of(bean, 1)).returns(new TypeHint<Tuple2<EventBean2, Integer>>() {
+                })
+                .keyBy(tp -> tp.f0.getGuid())
+                .window(SlidingEventTimeWindows.of(Time.seconds(30), Time.seconds(10)))
                 // 数据: Tuple2<Bean,1>
                 .sum("f1")
-                /*.print()*/;
+        /*.print()*/;
 
 
         /**
@@ -202,10 +201,9 @@ public class _20_Window_Api_Demo1 {
          */
         watermarkedBeanStream
                 .keyBy(EventBean2::getGuid)
-                .window(SlidingEventTimeWindows.of(Time.seconds(30),Time.seconds(10)))
+                .window(SlidingEventTimeWindows.of(Time.seconds(30), Time.seconds(10)))
                 .max("actTimelong")
-                /*.print()*/;
-
+        /*.print()*/;
 
 
         /**
@@ -216,10 +214,9 @@ public class _20_Window_Api_Demo1 {
          */
         watermarkedBeanStream
                 .keyBy(EventBean2::getGuid)
-                .window(SlidingEventTimeWindows.of(Time.seconds(30),Time.seconds(10)))
+                .window(SlidingEventTimeWindows.of(Time.seconds(30), Time.seconds(10)))
                 .maxBy("actTimelong")
-                /*.print()*/;
-
+        /*.print()*/;
 
 
         /**
@@ -228,20 +225,20 @@ public class _20_Window_Api_Demo1 {
          * 用 process算子来实现
          */
         watermarkedBeanStream
-                .keyBy(bean->bean.getPageId())
-                .window(SlidingEventTimeWindows.of(Time.seconds(30),Time.seconds(10)))
-                .process(new ProcessWindowFunction<EventBean2, Tuple3<String,String,Double>, String, TimeWindow>() {
+                .keyBy(bean -> bean.getPageId())
+                .window(SlidingEventTimeWindows.of(Time.seconds(30), Time.seconds(10)))
+                .process(new ProcessWindowFunction<EventBean2, Tuple3<String, String, Double>, String, TimeWindow>() {
                     @Override
-                    public void process(String key, ProcessWindowFunction<EventBean2, Tuple3<String,String,Double>, String, TimeWindow>.Context context, Iterable<EventBean2> elements, Collector<Tuple3<String,String,Double>> out) throws Exception {
+                    public void process(String key, ProcessWindowFunction<EventBean2, Tuple3<String, String, Double>, String, TimeWindow>.Context context, Iterable<EventBean2> elements, Collector<Tuple3<String, String, Double>> out) throws Exception {
                         // 构造一个hashmap来记录每一个事件的发生总次数，和行为总时长
                         HashMap<String, Tuple2<Integer, Long>> tmpMap = new HashMap<>();
 
                         // 遍历窗口中的每一条数据
                         for (EventBean2 element : elements) {
                             String eventId = element.getEventId();
-                            Tuple2<Integer, Long> countAndTimelong = tmpMap.getOrDefault(eventId,Tuple2.of(0,0L));
+                            Tuple2<Integer, Long> countAndTimelong = tmpMap.getOrDefault(eventId, Tuple2.of(0, 0L));
 
-                            tmpMap.put(eventId,Tuple2.of(countAndTimelong.f0+1,countAndTimelong.f1+element.getActTimelong()) );
+                            tmpMap.put(eventId, Tuple2.of(countAndTimelong.f0 + 1, countAndTimelong.f1 + element.getActTimelong()));
                         }
 
                         // 然后，从tmpMap中，取到 平均时长 最大的前两个事件
@@ -249,27 +246,26 @@ public class _20_Window_Api_Demo1 {
                         for (Map.Entry<String, Tuple2<Integer, Long>> entry : tmpMap.entrySet()) {
                             String eventId = entry.getKey();
                             Tuple2<Integer, Long> tuple = entry.getValue();
-                            double avgTimelong = tuple.f1/ (double)tuple.f0;
-                            tmpList.add(Tuple2.of(eventId,avgTimelong));
+                            double avgTimelong = tuple.f1 / (double) tuple.f0;
+                            tmpList.add(Tuple2.of(eventId, avgTimelong));
                         }
 
                         // 然后对tmpList按平均时长排序
                         Collections.sort(tmpList, new Comparator<Tuple2<String, Double>>() {
                             @Override
                             public int compare(Tuple2<String, Double> tp1, Tuple2<String, Double> tp2) {
-                               /* return tp2.f1.compareTo(tp1.f1);*/
-                                return Double.compare(tp2.f1,tp1.f1);
+                                /* return tp2.f1.compareTo(tp1.f1);*/
+                                return Double.compare(tp2.f1, tp1.f1);
                             }
                         });
 
                         // 输出前2个
-                        for(int i=0;i<Math.min(tmpList.size(),2);i++){
-                            out.collect(Tuple3.of(key,tmpList.get(i).f0,tmpList.get(i).f1));
+                        for (int i = 0; i < Math.min(tmpList.size(), 2); i++) {
+                            out.collect(Tuple3.of(key, tmpList.get(i).f0, tmpList.get(i).f1));
                         }
                     }
                 })
                 .print();
-
 
 
         /**
@@ -293,7 +289,10 @@ public class _20_Window_Api_Demo1 {
                      * @throws Exception
                      */
                     @Override
-                    public void apply(Long key, TimeWindow window, Iterable<EventBean2> input, Collector<EventBean2> out) throws Exception {
+                    public void apply(Long key,
+                                      TimeWindow window,
+                                      Iterable<EventBean2> input,
+                                      Collector<EventBean2> out) throws Exception {
 
                         // low bi写法： 从迭代器中迭代出数据，放入一个arraylist，然后排序，输出前2条
                         ArrayList<EventBean2> tmpList = new ArrayList<>();
@@ -325,7 +324,10 @@ public class _20_Window_Api_Demo1 {
                 .window(SlidingEventTimeWindows.of(Time.seconds(30), Time.seconds(10)))
                 .process(new ProcessWindowFunction<EventBean2, String, Long, TimeWindow>() {
                     @Override
-                    public void process(Long aLong, ProcessWindowFunction<EventBean2, String, Long, TimeWindow>.Context context, Iterable<EventBean2> input, Collector<String> out) throws Exception {
+                    public void process(Long aLong,
+                                        ProcessWindowFunction<EventBean2, String, Long, TimeWindow>.Context context,
+                                        Iterable<EventBean2> input,
+                                        Collector<String> out) throws Exception {
 
                         // 本次窗口的元信息
                         TimeWindow window = context.window();
@@ -352,7 +354,7 @@ public class _20_Window_Api_Demo1 {
                         // 输出前2条
                         for (int i = 0; i < Math.min(tmpList.size(), 2); i++) {
                             EventBean2 bean = tmpList.get(i);
-                            out.collect( "窗口start:"+windowStart + "," +"窗口end:"+ windowEnd + "," +  bean.getGuid() + "," + bean.getEventId() + "," + bean.getTimeStamp() + "," +bean.getPageId() + "," +bean.getActTimelong());
+                            out.collect("窗口start:" + windowStart + "," + "窗口end:" + windowEnd + "," + bean.getGuid() + "," + bean.getEventId() + "," + bean.getTimeStamp() + "," + bean.getPageId() + "," + bean.getActTimelong());
                         }
                     }
 
@@ -360,7 +362,6 @@ public class _20_Window_Api_Demo1 {
         /*resultStream4.print();*/
 
         env.execute();
-
 
 
     }

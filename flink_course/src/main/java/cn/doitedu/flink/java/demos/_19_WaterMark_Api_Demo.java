@@ -64,7 +64,7 @@ public class _19_WaterMark_Api_Demo {
                 .<String>forBoundedOutOfOrderness(Duration.ofMillis(0))  // 允许乱序的算法策略
                 .withTimestampAssigner((element, recordTimestamp) -> Long.parseLong(element.split(",")[2]));  // 时间戳抽取方法
         // 2、将构造好的 watermark策略对象，分配给流（source算子）
-        /*s1.assignTimestampsAndWatermarks(watermarkStrategy);*/
+        s1.assignTimestampsAndWatermarks(watermarkStrategy);
 
 
 

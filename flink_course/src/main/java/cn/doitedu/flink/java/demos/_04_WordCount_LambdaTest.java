@@ -1,5 +1,6 @@
 package cn.doitedu.flink.java.demos;
 
+import com.google.common.base.Function;
 import org.apache.flink.api.common.functions.FlatMapFunction;
 import org.apache.flink.api.common.functions.MapFunction;
 import org.apache.flink.api.common.typeinfo.TypeHint;
@@ -56,7 +57,8 @@ public class _04_WordCount_LambdaTest {
             }
         });*/
         // 从上面的接口来看，它依然是一个   单抽象方法的 接口，所以它的方法实现，依然可以用lambda表达式来实现
-        SingleOutputStreamOperator<Tuple2<String, Integer>> wordAndOne = upperCased.flatMap((String s, Collector<Tuple2<String, Integer>> collector) -> {
+        SingleOutputStreamOperator<Tuple2<String, Integer>> wordAndOne =
+                upperCased.flatMap((String s, Collector<Tuple2<String, Integer>> collector) -> {
                     String[] words = s.split("\\s+");
                     for (String word : words) {
                         collector.collect(Tuple2.of(word, 1));
@@ -65,7 +67,6 @@ public class _04_WordCount_LambdaTest {
                 // .returns(new TypeHint<Tuple2<String, Integer>>() {});   // 通过 TypeHint 传达返回数据类型
                 // .returns(TypeInformation.of(new TypeHint<Tuple2<String, Integer>>() {}));  // 更通用的，是传入TypeInformation,上面的TypeHint也是封装了TypeInformation
                 .returns(Types.TUPLE(Types.STRING, Types.INT));  // 利用工具类Types的各种静态方法，来生成TypeInformation
-
 
         // 按单词分组
         /*wordAndOne.keyBy(new KeySelector<Tuple2<String, Integer>, String>() {

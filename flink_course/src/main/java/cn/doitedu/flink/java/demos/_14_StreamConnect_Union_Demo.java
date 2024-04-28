@@ -3,6 +3,7 @@ package cn.doitedu.flink.java.demos;
 import com.alibaba.fastjson.JSON;
 import org.apache.flink.api.common.typeinfo.TypeInformation;
 import org.apache.flink.configuration.Configuration;
+import org.apache.flink.contrib.streaming.state.EmbeddedRocksDBStateBackend;
 import org.apache.flink.streaming.api.CheckpointingMode;
 import org.apache.flink.streaming.api.datastream.ConnectedStreams;
 import org.apache.flink.streaming.api.datastream.DataStream;
@@ -13,6 +14,8 @@ import org.apache.flink.streaming.api.functions.ProcessFunction;
 import org.apache.flink.streaming.api.functions.co.CoMapFunction;
 import org.apache.flink.util.Collector;
 import org.apache.flink.util.OutputTag;
+
+import java.util.concurrent.TimeUnit;
 
 /**
  * @Author: deep as the sea
@@ -29,6 +32,11 @@ public class _14_StreamConnect_Union_Demo {
         Configuration configuration = new Configuration();
         configuration.setInteger("rest.port", 8822);
         StreamExecutionEnvironment env = StreamExecutionEnvironment.createLocalEnvironmentWithWebUI(configuration);
+        env.setStateBackend(new EmbeddedRocksDBStateBackend(true));
+        env.enableCheckpointing(TimeUnit.SECONDS.toMillis(10), CheckpointingMode.AT_LEAST_ONCE);
+        env.getCheckpointConfig().setCheckpointStorage("/tmp");
+
+
         env.setParallelism(1);
 
         // 数字字符流

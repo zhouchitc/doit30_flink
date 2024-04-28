@@ -50,7 +50,10 @@ public class _21_Window_Api_Demo4 {
 
         SingleOutputStreamOperator<Tuple2<EventBean2,Integer>> beanStream = source.map(s -> {
                     String[] split = s.split(",");
-                    EventBean2 bean = new EventBean2(Long.parseLong(split[0]), split[1], Long.parseLong(split[2]), split[3], Integer.parseInt(split[4]));
+                    EventBean2 bean = new EventBean2(
+                            Long.parseLong(split[0]),
+                            split[1],
+                            Long.parseLong(split[2]), split[3], Integer.parseInt(split[4]));
                     return Tuple2.of(bean,1);
                 }).returns(new TypeHint<Tuple2<EventBean2, Integer>>() {})
                 .assignTimestampsAndWatermarks(WatermarkStrategy.<Tuple2<EventBean2,Integer>>forBoundedOutOfOrderness(Duration.ofMillis(0))

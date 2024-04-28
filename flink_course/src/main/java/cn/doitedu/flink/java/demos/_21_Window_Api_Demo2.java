@@ -27,15 +27,24 @@ public class _21_Window_Api_Demo2 {
         DataStreamSource<String> source = env.socketTextStream("localhost", 9999);
 
         SingleOutputStreamOperator<EventBean2> beanStream = source.map(s -> {
-            String[] split = s.split(",");
-            return new EventBean2(Long.parseLong(split[0]), split[1], Long.parseLong(split[2]), split[3], Integer.parseInt(split[4]));
-        }).assignTimestampsAndWatermarks(WatermarkStrategy.<EventBean2>forBoundedOutOfOrderness(Duration.ofMillis(0))
-                .withTimestampAssigner(new SerializableTimestampAssigner<EventBean2>() {
-                    @Override
-                    public long extractTimestamp(EventBean2 element, long recordTimestamp) {
-                        return element.getTimeStamp();
-                    }
-                }));
+                    String[] split = s.split(",");
+
+                    return new EventBean2(
+                            Long.parseLong(split[0]),
+                            split[1],
+                            Long.parseLong(split[2]),
+                            split[3],
+                            Integer.parseInt(split[4]));
+                })
+                .assignTimestampsAndWatermarks(
+                        WatermarkStrategy
+                                .<EventBean2>forBoundedOutOfOrderness(Duration.ofMillis(0))
+                                .withTimestampAssigner(new SerializableTimestampAssigner<EventBean2>() {
+                                    @Override
+                                    public long extractTimestamp(EventBean2 element, long recordTimestamp) {
+                                        return element.getTimeStamp();
+                                    }
+                                }));
         ;
 
 
@@ -85,6 +94,8 @@ public class _21_Window_Api_Demo2 {
 
         // 全局  处理间会话窗口
         beanStream.windowAll(ProcessingTimeSessionWindows.withGap(Time.seconds(30)));
+
+//        beanStream.countWindowAll()
 
 
         /**

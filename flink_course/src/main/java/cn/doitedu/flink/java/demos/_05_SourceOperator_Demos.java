@@ -90,6 +90,8 @@ public class _05_SourceOperator_Demos {
                 //    OffsetsInitializer.latest()  消费起始位移直接选择为 “最新”
                 //    OffsetsInitializer.offsets(Map<TopicPartition,Long>)  消费起始位移选择为：方法所传入的每个分区和对应的起始偏移量
                 .setStartingOffsets(OffsetsInitializer.committedOffsets(OffsetResetStrategy.LATEST))
+//                .setStartingOffsets(OffsetsInitializer.timestamp())
+
 
                 // 设置value数据的反序列化器
                 .setValueOnlyDeserializer(new SimpleStringSchema())

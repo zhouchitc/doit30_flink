@@ -32,14 +32,14 @@ public class _23_State_OperatorState_Demo {
         // 开启状态数据的checkpoint机制（快照的周期，快照的模式）
         env.enableCheckpointing(1000, CheckpointingMode.EXACTLY_ONCE);
         // 开启快照后，就需要指定快照数据的持久化存储位置
-       /* env.getCheckpointConfig().setCheckpointStorage(new URI("hdfs://doit01:8020/checkpoint/"));*/
+        /* env.getCheckpointConfig().setCheckpointStorage(new URI("hdfs://doit01:8020/checkpoint/"));*/
         env.getCheckpointConfig().setCheckpointStorage("file:///d:/checkpoint/");
 
 
         // 开启  task级别故障自动 failover
         // env.setRestartStrategy(RestartStrategies.noRestart()); // 默认是，不会自动failover；一个task故障了，整个job就失败了
         // 使用的重启策略是： 固定重启上限和重启时间间隔
-        env.setRestartStrategy(RestartStrategies.fixedDelayRestart(3,1000));
+        env.setRestartStrategy(RestartStrategies.fixedDelayRestart(3, 1000));
 
 
         DataStreamSource<String> source = env.socketTextStream("localhost", 9999);
@@ -59,12 +59,13 @@ public class _23_State_OperatorState_Demo {
  * 要使用operator state，需要让用户自己的Function类去实现 CheckpointedFunction
  * 然后在其中的 方法initializeState 中，去拿到operator state 存储器
  */
-class StateMapFunction implements  MapFunction<String,String> , CheckpointedFunction{
+class StateMapFunction implements MapFunction<String, String>, CheckpointedFunction {
 
     ListState<String> listState;
 
     /**
      * 正常的MapFunction的处理逻辑方法
+     *
      * @param value The input value.
      * @return
      * @throws Exception
@@ -75,12 +76,11 @@ class StateMapFunction implements  MapFunction<String,String> , CheckpointedFunc
         /**
          * 故意埋一个异常，来测试 task级别自动容错效果
          */
-        if(value.equals("x") && RandomUtils.nextInt(1,15)% 4 == 0)
+        if (value.equals("x") && RandomUtils.nextInt(1, 15) % 4 == 0)
             throw new Exception("哈哈哈哈,出错了");
 
         // 将本条数据，插入到状态存储器中
         listState.add(value);
-
 
 
         // 然后拼接历史以来的字符串
@@ -95,6 +95,7 @@ class StateMapFunction implements  MapFunction<String,String> , CheckpointedFunc
 
     /**
      * 系统对状态数据做快照（持久化）时会调用的方法，用户利用这个方法，在持久化前，对状态数据做一些操控
+     *
      * @param context the context for drawing a snapshot of the operator
      * @throws Exception
      */
@@ -105,6 +106,7 @@ class StateMapFunction implements  MapFunction<String,String> , CheckpointedFunc
 
     /**
      * 算子任务在启动之初，会调用下面的方法，来为用户进行状态数据初始化
+     *
      * @param context the context for initializing the operator
      * @throws Exception
      */
@@ -121,14 +123,13 @@ class StateMapFunction implements  MapFunction<String,String> , CheckpointedFunc
         // 如果是job重启，则不会自动加载此前的快照状态数据
         listState = operatorStateStore.getListState(stateDescriptor);  // 在状态存储器上调用get方法，得到具体结构的状态管理器
 
-
+        context.isRestored();
         /**
          * unionListState 和普通 ListState的区别：
          * unionListState的快照存储数据，在系统重启后，list数据的重分配模式为： 广播模式； 在每个subtask上都拥有一份完整的数据
          * ListState的快照存储数据，在系统重启后，list数据的重分配模式为： round-robin； 轮询平均分配
          */
         //ListState<String> unionListState = operatorStateStore.getUnionListState(stateDescriptor);
-
 
 
     }

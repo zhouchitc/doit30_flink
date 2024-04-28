@@ -37,19 +37,21 @@ public class _16_BroadCast_Demo {
         // id,eventId
         DataStreamSource<String> stream1 = env.socketTextStream("localhost", 9998);
 
-        SingleOutputStreamOperator<Tuple2<String, String>> s1 = stream1.map(s -> {
-            String[] arr = s.split(",");
-            return Tuple2.of(arr[0], arr[1]);
-        }).returns(new TypeHint<Tuple2<String, String>>() {
+        SingleOutputStreamOperator<Tuple2<String, String>> s1 = stream1.map(
+                s -> {
+                    String[] arr = s.split(",");
+                    return Tuple2.of(arr[0], arr[1]);
+                }).returns(new TypeHint<Tuple2<String, String>>() {
         });
 
         // id,age,city
         DataStreamSource<String> stream2 = env.socketTextStream("localhost", 9999);
 
-        SingleOutputStreamOperator<Tuple3<String, String, String>> s2 = stream2.map(s -> {
-            String[] arr = s.split(",");
-            return Tuple3.of(arr[0], arr[1], arr[2]);
-        }).returns(new TypeHint<Tuple3<String, String, String>>() {
+        SingleOutputStreamOperator<Tuple3<String, String, String>> s2 = stream2.map(
+                s -> {
+                    String[] arr = s.split(",");
+                    return Tuple3.of(arr[0], arr[1], arr[2]);
+                }).returns(new TypeHint<Tuple3<String, String, String>>() {
         });
 
 
@@ -62,7 +64,13 @@ public class _16_BroadCast_Demo {
          */
 
         // 将字典数据所在流： s2  ，  转成 广播流
-        MapStateDescriptor<String, Tuple2<String, String>> userInfoStateDesc = new MapStateDescriptor<>("userInfoStateDesc", TypeInformation.of(String.class), TypeInformation.of(new TypeHint<Tuple2<String, String>>() {}));
+        MapStateDescriptor<String, Tuple2<String, String>> userInfoStateDesc =
+                new MapStateDescriptor<>(
+                        "userInfoStateDesc",
+                        TypeInformation.of(String.class),
+                        TypeInformation.of(new TypeHint<Tuple2<String, String>>() {
+                        }));
+
         BroadcastStream<Tuple3<String, String, String>> s2BroadcastStream = s2.broadcast(userInfoStateDesc);
 
         // 哪个流处理中需要用到广播状态数据，就要 去  连接 connect  这个广播流
@@ -75,49 +83,56 @@ public class _16_BroadCast_Demo {
          *      在processBroadcastElement方法中，把获取到的广播流中的数据，插入到 “广播状态”中
          *      在processElement方法中，对取到的主流数据进行处理（从广播状态中获取要拼接的数据，拼接后输出）
          */
-        SingleOutputStreamOperator<String> resultStream = connected.process(new BroadcastProcessFunction<Tuple2<String, String>, Tuple3<String, String, String>, String>() {
+        SingleOutputStreamOperator<String> resultStream = connected.process(
+                new BroadcastProcessFunction<Tuple2<String, String>, Tuple3<String, String, String>, String>() {
 
-            /*BroadcastState<String, Tuple2<String, String>> broadcastState;*/
+                    /*BroadcastState<String, Tuple2<String, String>> broadcastState;*/
 
-            /**
-             * 本方法，是用来处理 主流中的数据（每来一条，调用一次）
-             * @param element  左流（主流）中的一条数据
-             * @param ctx  上下文
-             * @param out  输出器
-             * @throws Exception
-             */
-            @Override
-            public void processElement(Tuple2<String, String> element, BroadcastProcessFunction<Tuple2<String, String>, Tuple3<String, String, String>, String>.ReadOnlyContext ctx, Collector<String> out) throws Exception {
+                    /**
+                     * 本方法，是用来处理 主流中的数据（每来一条，调用一次）
+                     * @param element  左流（主流）中的一条数据
+                     * @param ctx  上下文
+                     * @param out  输出器
+                     * @throws Exception
+                     */
+                    @Override
+                    public void processElement(
+                            Tuple2<String, String> element,
+                            BroadcastProcessFunction<Tuple2<String, String>, Tuple3<String, String, String>, String>.ReadOnlyContext ctx,
+                            Collector<String> out) throws Exception {
 
-                // 通过 ReadOnlyContext ctx 取到的广播状态对象，是一个 “只读 ” 的对象；
-                ReadOnlyBroadcastState<String, Tuple2<String, String>> broadcastState = ctx.getBroadcastState(userInfoStateDesc);
+                        // 通过 ReadOnlyContext ctx 取到的广播状态对象，是一个 “只读 ” 的对象；
+                        ReadOnlyBroadcastState<String, Tuple2<String, String>> broadcastState = ctx.getBroadcastState(userInfoStateDesc);
 
-                if (broadcastState != null) {
-                    Tuple2<String, String> userInfo = broadcastState.get(element.f0);
-                    out.collect(element.f0 + "," + element.f1 + "," + (userInfo == null ? null : userInfo.f0) + "," + (userInfo == null ? null : userInfo.f1));
-                } else {
-                    out.collect(element.f0 + "," + element.f1 + "," + null + "," + null);
-                }
+                        if (broadcastState != null) {
+                            Tuple2<String, String> userInfo = broadcastState.get(element.f0);
+                            out.collect(element.f0 + "," + element.f1 + "," + (userInfo == null ? null : userInfo.f0) + "," + (userInfo == null ? null : userInfo.f1));
+                        } else {
+                            out.collect(element.f0 + "," + element.f1 + "," + null + "," + null);
+                        }
 
-            }
+                    }
 
-            /**
-             *
-             * @param element  广播流中的一条数据
-             * @param ctx  上下文
-             * @param out 输出器
-             * @throws Exception
-             */
-            @Override
-            public void processBroadcastElement(Tuple3<String, String, String> element, BroadcastProcessFunction<Tuple2<String, String>, Tuple3<String, String, String>, String>.Context ctx, Collector<String> out) throws Exception {
+                    /**
+                     *
+                     * @param element  广播流中的一条数据
+                     * @param ctx  上下文
+                     * @param out 输出器
+                     * @throws Exception
+                     */
+                    @Override
+                    public void processBroadcastElement(
+                            Tuple3<String, String, String> element,
+                            BroadcastProcessFunction<Tuple2<String, String>, Tuple3<String, String, String>, String>.Context ctx,
+                            Collector<String> out) throws Exception {
 
-                // 从上下文中，获取广播状态对象（可读可写的状态对象）
-                BroadcastState<String, Tuple2<String, String>> broadcastState = ctx.getBroadcastState(userInfoStateDesc);
+                        // 从上下文中，获取广播状态对象（可读可写的状态对象）
+                        BroadcastState<String, Tuple2<String, String>> broadcastState = ctx.getBroadcastState(userInfoStateDesc);
 
-                // 然后将获得的这条  广播流数据， 拆分后，装入广播状态
-                broadcastState.put(element.f0, Tuple2.of(element.f1, element.f2));
-            }
-        });
+                        // 然后将获得的这条  广播流数据， 拆分后，装入广播状态
+                        broadcastState.put(element.f0, Tuple2.of(element.f1, element.f2));
+                    }
+                });
 
 
         resultStream.print();

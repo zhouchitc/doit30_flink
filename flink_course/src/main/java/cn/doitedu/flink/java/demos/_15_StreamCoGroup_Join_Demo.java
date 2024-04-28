@@ -59,7 +59,7 @@ public class _15_StreamCoGroup_Join_Demo {
          *    利用coGroup算子，来实现两个流的数据按id相等进行窗口关联（包含inner ，left， right， outer）
          */
         DataStream<String> resultStream = s1.coGroup(s2)
-                .where(tp -> tp.f0)  // 左流的  f0 字段
+                .where(tp -> tp.f0)// 左流的  f0 字段
                 .equalTo(tp -> tp.f0)   // 右流的 f0 字段
                 .window(TumblingProcessingTimeWindows.of(Time.seconds(20)))  // 划分窗口
                 .apply(new CoGroupFunction<Tuple2<String, String>, Tuple3<String, String, String>, String>() {
@@ -120,7 +120,6 @@ public class _15_StreamCoGroup_Join_Demo {
                 });
 
         joinedStream.print();
-
 
 
         env.execute();
